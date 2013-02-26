@@ -8,6 +8,17 @@ Instant test suites from repl transcripts!
 
 Copy and paste a repl transcript inside a replay form, give it a name, et voila!
 
+    (replay addition
+    => (+ 2 2)
+    4
+    ^:eg => (rand-int 6)
+    4
+    ^:nd => (shuffle [1 1 2 3])
+    [1 2 1 3]
+    => 39
+    => (+ *1 3)
+    42)
+
 See https://gist.github.com/cgrand/a52879f4a5edc4c4cc46 for an example.
 
     => (doc replay)
