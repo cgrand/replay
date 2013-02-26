@@ -15,20 +15,6 @@
 (def ^:dynamic *test-eg* 
   "When set to true, even example outputs in replay forms are tested." false)
 
-(defn- split-inputs [prompt forms]
-  (loop [m nil inputs [] s (seq forms)] 
-    (when-let [[x & xs] s]
-      (if (= prompt x)
-        (recur (meta x) (if xs (conj inputs (first xs)) inputs) (next xs))
-        [m inputs s]))))
-
-(defmacro do123 [& forms]
-  (let [r (gensym "r")
-        bindings (into '[*3 nil *2 nil *1 nil]
-                   (mapcat (fn [f] [r f '*3 '*2 '*2 '*1 '*1 r])
-                     forms))]
-    `(let ~bindings ~'*1)))
-
 (defn nd=  [& colls]
   (apply = (map frequencies colls)))
 
@@ -47,19 +33,26 @@
   (let [body (cons options? body)
         {wrap :wrap-with :keys [before after prompt] :or {wrap `do prompt '=>} :as options}
           (into {} (map vec (take-while (comp keyword? first) (partition 2 body))))
-        body (drop (* 2 (count options)) body)]
-    `(deftest ~name 
-       ~@(for [[m ins out] (->> 
-                             (iterate (fn [[_ _ s]] (split-inputs prompt (next s))) 
-                               [nil nil (cons nil body)])
-                             next
-                             (take-while (fn [[_ _ s]] (seq s)))
-                             (map (fn [[m in s]] [m in (first s)])))]
-           (let [eq (if (:nd m) `nd= `=)
-                 is-form `(is (~eq (~wrap ~before (let [r# (do123 ~@ins)] ~after r#)) '~out))
-                 is-form (with-meta is-form (meta (last ins)))]
-             (if (:eg m) 
-               `(when *test-eg* ~is-form)
-               is-form))))))
+        body (drop (* 2 (count options)) body)
+        r (gensym "r")]
+    `(deftest ~name
+       (~wrap
+         ~before
+         (let [~@(mapcat (fn [[ppx px x]] 
+                           (when (not= x prompt)
+                             (assert (or (= prompt px) (= prompt ppx)))
+                             (if (= prompt px) 
+                               [r x '*3 '*2 '*2 '*1 '*1 r]
+                               (let [m (meta ppx)
+                                     eq (if (:nd m) `nd= `=)
+                                     is-form `(is (~eq ~'*1 '~x))
+                                     is-form (with-meta is-form (meta px))
+                                     is-form (if (:eg m) 
+                                               `(when *test-eg* ~is-form)
+                                               is-form)]
+                                 [r is-form])))) 
+                   (partition 3 1 (cons nil body)))]
+           nil)
+         ~after))))
 
 

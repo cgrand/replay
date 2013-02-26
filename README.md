@@ -2,7 +2,7 @@
 
 Instant test suites from repl transcripts!
 
-    [net.cgrand/replay "0.1.0]
+    [net.cgrand/replay "0.1.1"]
 
 ## Usage
 
