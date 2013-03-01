@@ -73,7 +73,7 @@ See https://gist.github.com/cgrand/a52879f4a5edc4c4cc46 for an example.
     ([name options? & body])
     Macro
       Creates a test out of a curated repl session. Takes a name for the test,
-       an inline set of options (as alyernating keywords and values) and the repl
+       an inline set of options (as alternating keywords and values) and the repl
        transcript.
        Prompts support metadata: :eg means the result should not be tested unless
        *test-eg* is true, :nd means that output order is irrelevant (non determinist)
